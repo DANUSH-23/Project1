@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Purchase Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .table-scroll {
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e0 #f7fafc;
+        }
+        .table-scroll::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .table-scroll::-webkit-scrollbar-track {
+            background: #f7fafc;
+            border-radius: 4px;
+        }
+        .table-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 4px;
+        }
+        .table-scroll::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0;
+        }
+        .product-item {
+            transition: all 0.3s ease;
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-white mb-2">Customer Purchase Manager</h1>
+            <p class="text-blue-100">Manage your customer data efficiently</p>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="glass-effect rounded-lg mb-8 p-1">
+            <div class="flex flex-wrap gap-1">
+                <button id="addTab" class="tab-btn flex-1 px-4 py-3 rounded-md bg-blue-600 text-white font-medium transition-all">
+                    📝 Add Purchase
+                </button>
+                <button id="viewTab" class="tab-btn flex-1 px-4 py-3 rounded-md text-gray-600 hover:bg-gray-100 font-medium transition-all">
+                    📊 View Records
+                </button>
+            </div>
+        </div>
+
+        <!-- Add Purchase Form -->
+        <div id="addSection" class="glass-effect rounded-lg p-6 mb-8">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-6">Add New Purchase</h2>
+            
+            <!-- Products Section -->
+            <div class="mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-medium text-gray-700">Products</h3>
+                    <button type="button" id="addProductBtn" class="bg-blue-500 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-600 transition-colors">
+                        + Add Product
+                    </button>
+                </div>
+                
+                <div id="productsContainer" class="space-y-3">
+                    <!-- Product items will be added here -->
+                </div>
+                
+                <div class="mt-4 p-3 bg-gray-50 rounded-lg">
+                    <div class="flex justify-between items-center">
+                        <span class="font-medium text-gray-700">Total Price:</span>
+                        <span id="totalPrice" class="text-xl font-bold text-blue-600">₹0.00</span>
+                    </div>
+                </div>
+            </div>
+            
+            <form id="purchaseForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Customer Name</label>
+                    <input type="text" id="customerName" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                    <input type="tel" id="phoneNumber" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                </div>
+
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Address</label>
+                    <textarea id="address" required rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">City</label>
+                    <input type="text" id="city" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">State</label>
+                    <input type="text" id="state" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Region</label>
+                    <input type="text" id="region" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Purchase Date</label>
+                    <input type="date" id="purchaseDate" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                </div>
+
+                <div class="md:col-span-2">
+                    <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transform hover:scale-[1.02] transition-all shadow-lg">
+                        💾 Save Purchase Record
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- View Records Section -->
+        <div id="viewSection" class="glass-effect rounded-lg p-6 hidden">
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
+                <h2 class="text-2xl font-semibold text-gray-800">Purchase Records</h2>
+                <div class="flex flex-wrap gap-2">
+                    <button id="exportCsv" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-all shadow-md">
+                        📊 Export CSV
+                    </button>
+                    <button id="exportExcel" class="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-all shadow-md">
+                        📈 Export Excel
+                    </button>
+                    <button id="clearAll" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-all shadow-md">
+                        🗑️ Clear All
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                    <input type="text" id="searchInput" placeholder="Search records..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Filter by City</label>
+                    <select id="cityFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">All Cities</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Filter by State</label>
+                    <select id="stateFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">All States</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Filter by Date</label>
+                    <input type="date" id="dateFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+            </div>
+
+            <!-- Records Table -->
+            <div class="overflow-x-auto table-scroll bg-white rounded-lg shadow-inner">
+                <table class="w-full min-w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" data-sort="id">
+                                ID ↕️
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" data-sort="products">
+                                Products ↕️
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" data-sort="totalPrice">
+                                Total Price ↕️
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" data-sort="customerName">
+                                Customer ↕️
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" data-sort="phoneNumber">
+                                Phone ↕️
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" data-sort="city">
+                                City ↕️
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" data-sort="state">
+                                State ↕️
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" data-sort="purchaseDate">
+                                Date ↕️
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Action
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="recordsTableBody" class="bg-white divide-y divide-gray-200">
+                        <!-- Records will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- No Records Message -->
+            <div id="noRecords" class="text-center py-12 hidden">
+                <div class="text-6xl mb-4">📋</div>
+                <h3 class="text-lg font-medium text-gray-600 mb-2">No records found</h3>
+                <p class="text-gray-500">Add your first purchase record to get started</p>
+            </div>
+
+            <!-- Records Count -->
+            <div class="mt-4 text-sm text-gray-600">
+                Total Records: <span id="recordCount" class="font-semibold">0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success/Error Messages -->
+    <div id="message" class="fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg hidden z-50">
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Confirm Delete</h3>
+            <p class="text-gray-600 mb-6">Are you sure you want to delete this record? This action cannot be undone.</p>
+            <div class="flex gap-3">
+                <button id="confirmDelete" class="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-all">
+                    Delete
+                </button>
+                <button id="cancelDelete" class="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-400 transition-all">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class CustomerDataManager {
+            constructor() {
+                this.records = JSON.parse(localStorage.getItem('customerRecords')) || [];
+                this.currentSort = { field: 'id', direction: 'desc' };
+                this.recordToDelete = null;
+                this.productCount = 0;
+                this.init();
+            }
+
+            init() {
+                this.setCurrentDate();
+                this.bindEvents();
+                this.addProduct(); // Add first product by default
+                this.updateFilterOptions();
+                this.displayRecords();
+                this.updateRecordCount();
+            }
+
+            setCurrentDate() {
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('purchaseDate').value = today;
+            }
+
+            bindEvents() {
+                // Tab switching
+                document.getElementById('addTab').addEventListener('click', () => this.switchTab('add'));
+                document.getElementById('viewTab').addEventListener('click', () => this.switchTab('view'));
+
+                // Add product button
+                document.getElementById('addProductBtn').addEventListener('click', () => this.addProduct());
+
+                // Form submission
+                document.getElementById('purchaseForm').addEventListener('submit', (e) => this.handleFormSubmit(e));
+
+                // Search and filters
+                document.getElementById('searchInput').addEventListener('input', () => this.displayRecords());
+                document.getElementById('cityFilter').addEventListener('change', () => this.displayRecords());
+                document.getElementById('stateFilter').addEventListener('change', () => this.displayRecords());
+                document.getElementById('dateFilter').addEventListener('change', () => this.displayRecords());
+
+                // Export buttons
+                document.getElementById('exportCsv').addEventListener('click', () => this.exportData('csv'));
+                document.getElementById('exportExcel').addEventListener('click', () => this.exportData('excel'));
+                document.getElementById('clearAll').addEventListener('click', () => this.clearAllRecords());
+
+                // Table sorting
+                document.querySelectorAll('th[data-sort]').forEach(header => {
+                    header.addEventListener('click', () => this.sortTable(header.dataset.sort));
+                });
+
+                // Modal events
+                document.getElementById('confirmDelete').addEventListener('click', () => this.confirmDelete());
+                document.getElementById('cancelDelete').addEventListener('click', () => this.closeDeleteModal());
+            }
+
+            addProduct() {
+                this.productCount++;
+                const productId = `product-${this.productCount}`;
+                const priceId = `price-${this.productCount}`;
+                
+                const productHtml = `
+                    <div class="product-item fade-in grid grid-cols-1 md:grid-cols-12 gap-3 items-end p-3 bg-gray-50 rounded-lg">
+                        <div class="md:col-span-5">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
+                            <input type="text" data-product-name required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div class="md:col-span-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Price (₹)</label>
+                            <input type="number" data-product-price required step="0.01" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" oninput="manager.calculateTotal()">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+                            <input type="number" data-product-quantity value="1" min="1" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" oninput="manager.calculateTotal()">
+                        </div>
+                        <div class="md:col-span-1 flex justify-center">
+                            <button type="button" class="remove-product bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition-colors" ${this.productCount === 1 ? 'disabled' : ''}>
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                const productsContainer = document.getElementById('productsContainer');
+                productsContainer.insertAdjacentHTML('beforeend', productHtml);
+                
+                // Add event listener to the remove button
+                const newProduct = productsContainer.lastElementChild;
+                const removeBtn = newProduct.querySelector('.remove-product');
+                removeBtn.addEventListener('click', () => {
+                    newProduct.remove();
+                    this.calculateTotal();
+                });
+            }
+
+            calculateTotal() {
+                const productItems = document.querySelectorAll('.product-item');
+                let total = 0;
+                
+                productItems.forEach(item => {
+                    const priceInput = item.querySelector('[data-product-price]');
+                    const quantityInput = item.querySelector('[data-product-quantity]');
+                    
+                    if (priceInput && quantityInput) {
+                        const price = parseFloat(priceInput.value) || 0;
+                        const quantity = parseInt(quantityInput.value) || 1;
+                        total += price * quantity;
+                    }
+                });
+                
+                document.getElementById('totalPrice').textContent = `₹${total.toFixed(2)}`;
+                return total;
+            }
+
+            switchTab(tab) {
+                const addTab = document.getElementById('addTab');
+                const viewTab = document.getElementById('viewTab');
+                const addSection = document.getElementById('addSection');
+                const viewSection = document.getElementById('viewSection');
+
+                if (tab === 'add') {
+                    addTab.classList.add('bg-blue-600', 'text-white');
+                    addTab.classList.remove('text-gray-600', 'hover:bg-gray-100');
+                    viewTab.classList.remove('bg-blue-600', 'text-white');
+                    viewTab.classList.add('text-gray-600', 'hover:bg-gray-100');
+                    addSection.classList.remove('hidden');
+                    viewSection.classList.add('hidden');
+                } else {
+                    viewTab.classList.add('bg-blue-600', 'text-white');
+                    viewTab.classList.remove('text-gray-600', 'hover:bg-gray-100');
+                    addTab.classList.remove('bg-blue-600', 'text-white');
+                    addTab.classList.add('text-gray-600', 'hover:bg-gray-100');
+                    viewSection.classList.remove('hidden');
+                    addSection.classList.add('hidden');
+                    this.displayRecords();
+                }
+            }
+
+            handleFormSubmit(e) {
+                e.preventDefault();
+                
+                // Get all products
+                const products = [];
+                const productItems = document.querySelectorAll('.product-item');
+                
+                productItems.forEach(item => {
+                    const nameInput = item.querySelector('[data-product-name]');
+                    const priceInput = item.querySelector('[data-product-price]');
+                    const quantityInput = item.querySelector('[data-product-quantity]');
+                    
+                    if (nameInput && priceInput && quantityInput) {
+                        products.push({
+                            name: nameInput.value.trim(),
+                            price: parseFloat(priceInput.value),
+                            quantity: parseInt(quantityInput.value) || 1
+                        });
+                    }
+                });
+                
+                // Validate at least one product
+                if (products.length === 0) {
+                    this.showMessage('Please add at least one product!', 'error');
+                    return;
+                }
+                
+                // Calculate total price
+                const totalPrice = this.calculateTotal();
+                
+                const formData = {
+                    id: Date.now(),
+                    products: products,
+                    totalPrice: totalPrice,
+                    customerName: document.getElementById('customerName').value.trim(),
+                    phoneNumber: document.getElementById('phoneNumber').value.trim(),
+                    address: document.getElementById('address').value.trim(),
+                    city: document.getElementById('city').value.trim(),
+                    state: document.getElementById('state').value.trim(),
+                    region: document.getElementById('region').value.trim(),
+                    purchaseDate: document.getElementById('purchaseDate').value,
+                    purchaseTime: new Date().toLocaleTimeString()
+                };
+
+                this.records.push(formData);
+                this.saveRecords();
+                this.updateFilterOptions();
+                this.showMessage('Purchase record added successfully!', 'success');
+                
+                // Reset form but keep one product
+                document.getElementById('purchaseForm').reset();
+                document.getElementById('productsContainer').innerHTML = '';
+                this.productCount = 0;
+                this.addProduct();
+                this.setCurrentDate();
+            }
+
+            saveRecords() {
+                localStorage.setItem('customerRecords', JSON.stringify(this.records));
+            }
+
+            updateFilterOptions() {
+                const cities = [...new Set(this.records.map(r => r.city))].sort();
+                const states = [...new Set(this.records.map(r => r.state))].sort();
+
+                const cityFilter = document.getElementById('cityFilter');
+                const stateFilter = document.getElementById('stateFilter');
+
+                // Clear existing options (except first one)
+                cityFilter.innerHTML = '<option value="">All Cities</option>';
+                stateFilter.innerHTML = '<option value="">All States</option>';
+
+                cities.forEach(city => {
+                    cityFilter.innerHTML += `<option value="${city}">${city}</option>`;
+                });
+
+                states.forEach(state => {
+                    stateFilter.innerHTML += `<option value="${state}">${state}</option>`;
+                });
+            }
+
+            getFilteredRecords() {
+                const search = document.getElementById('searchInput').value.toLowerCase();
+                const cityFilter = document.getElementById('cityFilter').value;
+                const stateFilter = document.getElementById('stateFilter').value;
+                const dateFilter = document.getElementById('dateFilter').value;
+
+                return this.records.filter(record => {
+                    const matchesSearch = !search || 
+                        Object.values(record).some(value => {
+                            if (Array.isArray(value)) {
+                                return value.some(item => 
+                                    Object.values(item).some(itemValue => 
+                                        String(itemValue).toLowerCase().includes(search)
+                                    )
+                                );
+                            }
+                            return String(value).toLowerCase().includes(search);
+                        });
+                    const matchesCity = !cityFilter || record.city === cityFilter;
+                    const matchesState = !stateFilter || record.state === stateFilter;
+                    const matchesDate = !dateFilter || record.purchaseDate === dateFilter;
+
+                    return matchesSearch && matchesCity && matchesState && matchesDate;
+                });
+            }
+
+            sortTable(field) {
+                if (this.currentSort.field === field) {
+                    this.currentSort.direction = this.currentSort.direction === 'asc' ? 'desc' : 'asc';
+                } else {
+                    this.currentSort.field = field;
+                    this.currentSort.direction = 'asc';
+                }
+                this.displayRecords();
+            }
+
+            displayRecords() {
+                const filteredRecords = this.getFilteredRecords();
+                
+                // Sort records
+                const sortedRecords = [...filteredRecords].sort((a, b) => {
+                    let aVal = a[this.currentSort.field];
+                    let bVal = b[this.currentSort.field];
+                    
+                    // Handle special cases for sorting
+                    if (this.currentSort.field === 'products') {
+                        aVal = a.products.map(p => p.name).join(', ');
+                        bVal = b.products.map(p => p.name).join(', ');
+                    }
+                    
+                    if (this.currentSort.direction === 'asc') {
+                        return aVal > bVal ? 1 : -1;
+                    } else {
+                        return aVal < bVal ? 1 : -1;
+                    }
+                });
+
+                const tbody = document.getElementById('recordsTableBody');
+                const noRecords = document.getElementById('noRecords');
+
+                if (sortedRecords.length === 0) {
+                    tbody.innerHTML = '';
+                    noRecords.classList.remove('hidden');
+                } else {
+                    noRecords.classList.add('hidden');
+                    tbody.innerHTML = sortedRecords.map(record => {
+                        const productsText = record.products.map(p => 
+                            `${p.name} (${p.quantity} × ₹${p.price.toFixed(2)})`
+                        ).join(', ');
+                        
+                        return `
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="px-4 py-3 text-sm text-gray-900">${record.id}</td>
+                                <td class="px-4 py-3 text-sm text-gray-900" title="${productsText}">
+                                    ${productsText.length > 50 ? productsText.substring(0, 50) + '...' : productsText}
+                                </td>
+                                <td class="px-4 py-3 text-sm text-gray-900 font-semibold">₹${record.totalPrice.toFixed(2)}</td>
+                                <td class="px-4 py-3 text-sm text-gray-900">${record.customerName}</td>
+                                <td class="px-4 py-3 text-sm text-gray-900">${record.phoneNumber}</td>
+                                <td class="px-4 py-3 text-sm text-gray-900">${record.city}</td>
+                                <td class="px-4 py-3 text-sm text-gray-900">${record.state}</td>
+                                <td class="px-4 py-3 text-sm text-gray-900">${new Date(record.purchaseDate).toLocaleDateString()}</td>
+                                <td class="px-4 py-3 text-sm">
+                                    <button onclick="manager.deleteRecord(${record.id})" class="bg-red-100 text-red-700 px-3 py-1 rounded-md text-xs hover:bg-red-200 transition-colors">
+                                        🗑️ Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+                
+                this.updateRecordCount();
+            }
+
+            updateRecordCount() {
+                const filteredCount = this.getFilteredRecords().length;
+                document.getElementById('recordCount').textContent = filteredCount;
+            }
+
+            deleteRecord(id) {
+                this.recordToDelete = id;
+                document.getElementById('deleteModal').classList.remove('hidden');
+            }
+
+            confirmDelete() {
+                if (this.recordToDelete) {
+                    this.records = this.records.filter(record => record.id !== this.recordToDelete);
+                    this.saveRecords();
+                    this.updateFilterOptions();
+                    this.displayRecords();
+                    this.showMessage('Record deleted successfully!', 'success');
+                    this.closeDeleteModal();
+                }
+            }
+
+            closeDeleteModal() {
+                document.getElementById('deleteModal').classList.add('hidden');
+                this.recordToDelete = null;
+            }
+
+            clearAllRecords() {
+                if (confirm('Are you sure you want to delete all records? This action cannot be undone.')) {
+                    this.records = [];
+                    this.saveRecords();
+                    this.updateFilterOptions();
+                    this.displayRecords();
+                    this.showMessage('All records cleared successfully!', 'success');
+                }
+            }
+
+            exportData(format) {
+                if (this.records.length === 0) {
+                    this.showMessage('No data to export!', 'error');
+                    return;
+                }
+
+                const filteredRecords = this.getFilteredRecords();
+                const exportData = filteredRecords.map(record => {
+                    const productsText = record.products.map(p => 
+                        `${p.name} (Qty: ${p.quantity}, Price: ₹${p.price.toFixed(2)})`
+                    ).join('; ');
+                    
+                    return {
+                        'ID': record.id,
+                        'Products': productsText,
+                        'Total Price': record.totalPrice,
+                        'Customer Name': record.customerName,
+                        'Phone Number': record.phoneNumber,
+                        'Address': record.address,
+                        'City': record.city,
+                        'State': record.state,
+                        'Region': record.region,
+                        'Purchase Date': record.purchaseDate,
+                        'Purchase Time': record.purchaseTime
+                    };
+                });
+
+                if (format === 'csv') {
+                    this.downloadCSV(exportData);
+                } else if (format === 'excel') {
+                    this.downloadExcel(exportData);
+                }
+            }
+
+            downloadCSV(data) {
+                const headers = Object.keys(data[0]);
+                const csvContent = [
+                    headers.join(','),
+                    ...data.map(row => headers.map(header => `"${row[header]}"`).join(','))
+                ].join('\n');
+
+                const blob = new Blob([csvContent], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `customer_purchases_${new Date().toISOString().split('T')[0]}.csv`;
+                a.click();
+                window.URL.revokeObjectURL(url);
+                this.showMessage('CSV exported successfully!', 'success');
+            }
+
+            downloadExcel(data) {
+                const ws = XLSX.utils.json_to_sheet(data);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'Customer Purchases');
+                XLSX.writeFile(wb, `customer_purchases_${new Date().toISOString().split('T')[0]}.xlsx`);
+                this.showMessage('Excel file exported successfully!', 'success');
+            }
+
+            showMessage(text, type) {
+                const message = document.getElementById('message');
+                message.textContent = text;
+                message.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 ${
+                    type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+                }`;
+                message.classList.remove('hidden');
+
+                setTimeout(() => {
+                    message.classList.add('hidden');
+                }, 3000);
+            }
+        }
+
+        // Initialize the application
+        const manager = new CustomerDataManager();
+    </script>
+</body>
+</html>
